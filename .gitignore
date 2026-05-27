@@ -1,0 +1,10 @@
+.env
+.DS_Store
+wp-content/upgrade/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/uploads/wp-personal-data-exports/
+*.log
+
+# Interviewer-only material — never shipped to candidates.
+interviewer/
