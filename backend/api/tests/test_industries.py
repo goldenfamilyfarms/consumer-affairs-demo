@@ -1,21 +1,22 @@
 """Contract tests for ``GET /api/industries/``.
 
-The endpoint backs the React filter dropdown so it can load the full set of
-industries independently of the brand result set (fixing the cold-start where
-the dropdown would otherwise be empty or incomplete).
+Drives Django's test ``Client`` against the literal path so it's independent of
+the API framework (DRF or Django Ninja).
 """
 
+from http import HTTPStatus
+
 import pytest
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APIClient
+from django.test import Client
 
 from catalog.models import Brand, Industry
+
+INDUSTRIES_URL = "/api/industries/"
 
 
 @pytest.fixture
 def client():
-    return APIClient()
+    return Client()
 
 
 @pytest.mark.django_db
@@ -25,9 +26,9 @@ def test_lists_all_industries_sorted_with_brand_counts(client):
     Brand.objects.create(name="A", slug="a", industry=finance, wp_post_id=101)
     Brand.objects.create(name="B", slug="b", industry=finance, wp_post_id=102)
 
-    response = client.get(reverse("api:industry-list"))
+    response = client.get(INDUSTRIES_URL)
 
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == HTTPStatus.OK
     data = response.json()
 
     # Unpaginated plain list (no count/next/previous envelope).
@@ -45,6 +46,6 @@ def test_lists_all_industries_sorted_with_brand_counts(client):
 
 @pytest.mark.django_db
 def test_empty_when_no_industries(client):
-    response = client.get(reverse("api:industry-list"))
-    assert response.status_code == status.HTTP_200_OK
+    response = client.get(INDUSTRIES_URL)
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == []

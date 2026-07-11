@@ -1,5 +1,5 @@
 Django>=5.0,<6.0
-djangorestframework>=3.15
+django-ninja>=1.3
 nh3>=0.2          # HTML sanitizer for rendering migrated post_content safely
 pytest>=8.0
 pytest-django>=4.8

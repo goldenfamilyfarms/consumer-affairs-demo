@@ -27,9 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third-party
-    "rest_framework",
-    # Local apps
+    # Local apps (django-ninja is a library, not an installed app)
     "catalog",
     "api",
 ]
@@ -104,9 +102,5 @@ STATICFILES_DIRS = [
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# REST Framework
-REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 12,
-}
+# API layer: django-ninja (see api/api.py). Pagination shape/size are defined
+# in api/api.py (page_size 12, max 100) rather than in a framework-wide setting.

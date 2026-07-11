@@ -11,7 +11,15 @@ from django.conf import settings
 def test_local_apps_installed():
     assert "catalog" in settings.INSTALLED_APPS
     assert "api" in settings.INSTALLED_APPS
-    assert "rest_framework" in settings.INSTALLED_APPS
+
+
+def test_ninja_api_is_wired():
+    """The Django Ninja API instance is importable and exposes routes."""
+    from api.api import api as ninja_api
+
+    assert ninja_api is not None
+    # ninja_api.urls is a 3-tuple (patterns, app_name, namespace) for include().
+    assert ninja_api.urls is not None
 
 
 def test_apps_are_loaded():
