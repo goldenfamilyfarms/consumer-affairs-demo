@@ -1,0 +1,128 @@
+// layout/_sections.scss — section wrappers and page/brand/review heroes.
+
+@use "../abstracts/tokens" as t;
+
+// Generic section
+.section {
+  padding: 48px 0;
+}
+
+.section h2 {
+  font-size: 1.5rem;
+  margin: 0 0 24px;
+  letter-spacing: -0.01em;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.section-header a {
+  font-size: 0.9rem;
+}
+
+// Home hero
+.hero {
+  background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+  color: #ffffff;
+  padding: 64px 0 56px;
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.hero p {
+  font-size: 1.1rem;
+  opacity: 0.92;
+  margin: 0;
+  max-width: 640px;
+}
+
+// Brand single
+.brand-hero {
+  background: #ffffff;
+  border-bottom: 1px solid var(--color-border);
+  padding: 40px 0;
+}
+
+.brand-hero h1 {
+  font-size: 2rem;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+.brand-hero .brand-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.brand-hero .brand-meta strong {
+  color: var(--color-text);
+}
+
+.brand-body {
+  padding: 32px 0 48px;
+}
+
+.brand-body .content {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 28px;
+  font-size: 1.02rem;
+}
+
+.reviews-section {
+  padding: 24px 0 64px;
+}
+
+.reviews-section h2 {
+  font-size: 1.4rem;
+  margin: 0 0 18px;
+}
+
+// Review single
+.review-hero {
+  background: #ffffff;
+  border-bottom: 1px solid var(--color-border);
+  padding: 32px 0 24px;
+}
+
+.review-hero .brand-link {
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.review-hero h1 {
+  font-size: 1.75rem;
+  margin: 8px 0 12px;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: t.$bp-mobile) {
+  .hero {
+    padding: 40px 0;
+  }
+
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+}

@@ -8,3 +8,11 @@ wp-content/uploads/wp-personal-data-exports/
 
 # Interviewer-only material — never shipped to candidates.
 interviewer/
+
+# Candidate interview-prep notes — not part of the submission.
+_prep/
+.venv/
+backend/db.sqlite3
+.django.pid
+.django.log
+.hypothesis/

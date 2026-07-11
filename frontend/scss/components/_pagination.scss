@@ -1,0 +1,44 @@
+// components/_pagination.scss — page number controls.
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0 0;
+}
+
+.pagination .page-numbers {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+.pagination .page-numbers.current {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+// Interactive page buttons (React): pointer + hover; the ellipsis gap marker
+// is inert (no border/background).
+.pagination button.page-numbers {
+  cursor: pointer;
+}
+
+.pagination button.page-numbers:hover:not(:disabled):not(.current) {
+  border-color: var(--color-muted);
+}
+
+.pagination button.page-numbers:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-numbers.dots {
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: default;
+  padding: 6px 4px;
+}

@@ -1,0 +1,78 @@
+{% extends "catalog/base.html" %}
+{% load catalog_extras %}
+
+{% block title %}{{ brand.name }} - Brand Reviews{% endblock %}
+
+{% block content %}
+<section class="brand-hero">
+  <div class="container">
+    <span class="badge">{{ brand.industry.name }}</span>
+    <h1>{{ brand.name }}</h1>
+    {% if brand.computed_average_rating is not None %}
+    <div class="stars" aria-label="Average rating: {{ brand.computed_average_rating|floatformat:1 }} out of 5">
+      {% for i in "12345" %}
+        {% if forloop.counter <= brand.computed_average_rating %}
+          <span class="star-full">&#9733;</span>
+        {% else %}
+          <span class="star-empty">&#9733;</span>
+        {% endif %}
+      {% endfor %}
+      <span class="rating-value">{{ brand.computed_average_rating|floatformat:1 }}</span>
+    </div>
+    {% else %}
+    <p class="meta">No ratings yet.</p>
+    {% endif %}
+    <div class="brand-meta">
+      {% if brand.website_url %}
+      <span><strong>Website:</strong> <a href="{{ brand.website_url }}" rel="noopener noreferrer" target="_blank">{{ brand.website_url }}</a></span>
+      {% endif %}
+      {% if brand.founded_year %}
+      <span><strong>Founded:</strong> {{ brand.founded_year }}</span>
+      {% endif %}
+      {% if brand.headquarters %}
+      <span><strong>Headquarters:</strong> {{ brand.headquarters }}</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="brand-body">
+  <div class="container">
+    <div class="content">
+      {{ brand.body|sanitize_html }}
+    </div>
+  </div>
+</section>
+
+<section class="reviews-section">
+  <div class="container">
+    <h2>Reviews</h2>
+    {% for review in reviews %}
+    <article class="review-item">
+      <div class="review-head">
+        <h3><a href="{% url 'catalog:review_detail' review.slug %}">{{ review.title }}</a></h3>
+        {% if review.rating %}
+        <div class="stars" aria-label="Rating: {{ review.rating }} out of 5">
+          {% for i in "12345" %}
+            {% if forloop.counter <= review.rating %}
+              <span class="star-full">&#9733;</span>
+            {% else %}
+              <span class="star-empty">&#9733;</span>
+            {% endif %}
+          {% endfor %}
+          <span class="rating-value">{{ review.rating }}.0</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="review-byline">
+        {% if review.reviewer_name %}By {{ review.reviewer_name }}{% endif %}
+        {% if review.reviewer_location %} &middot; {{ review.reviewer_location }}{% endif %}
+      </div>
+      <div class="review-body">{{ review.body|striptags|truncatewords:40 }}</div>
+    </article>
+    {% empty %}
+    <p>No reviews yet for this brand.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

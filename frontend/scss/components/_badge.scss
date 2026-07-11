@@ -1,0 +1,13 @@
+// components/_badge.scss — industry pill.
+
+.badge {
+  display: inline-block;
+  background: #ecfdf5;
+  color: var(--color-primary-dark);
+  border: 1px solid #d1fae5;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}

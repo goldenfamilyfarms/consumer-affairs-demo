@@ -1,0 +1,158 @@
+// components/_controls.scss — BrandList filter/sort toolbar.
+//
+// Turns the three bare native <select>s into a cohesive, aligned toolbar with
+// a results-count + active-filter affordance on the trailing edge. Native
+// controls are kept (accessible, keyboard-operable); only their presentation
+// is enhanced. Collapses to full-width stacked controls on mobile.
+
+@use "../abstracts/tokens" as t;
+
+.brand-list__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand-list__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 190px;
+    padding: 9px 36px 9px 13px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background-color: var(--color-card);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    cursor: pointer;
+    // Chevron indicator (inline SVG so no asset dependency).
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      border-color: var(--color-muted);
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: var(--color-bg);
+    }
+  }
+}
+
+// Trailing results-count + active-filter chip.
+.brand-list__meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.brand-list__count {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid #d1fae5;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: var(--color-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(17, 94, 89, 0.12);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+  }
+}
+
+@media (max-width: t.$bp-mobile) {
+  .brand-list__toolbar {
+    align-items: stretch;
+  }
+
+  .brand-list__controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .brand-list__meta {
+    margin-left: 0;
+  }
+}
+
+// Degraded-state hint shown when the industries endpoint is unavailable and no
+// options have been derived from results yet.
+.control__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}

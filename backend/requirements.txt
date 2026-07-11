@@ -1,0 +1,11 @@
+Django>=5.0,<6.0
+djangorestframework>=3.15
+nh3>=0.2          # HTML sanitizer for rendering migrated post_content safely
+pytest>=8.0
+pytest-django>=4.8
+hypothesis>=6.100
+
+# Optional: only needed for the MariaDbSource "scale" import path
+# (`import_wordpress --source=mariadb`). The default SqlDumpSource has no
+# database-driver dependency and the sources module imports without it.
+PyMySQL>=1.1

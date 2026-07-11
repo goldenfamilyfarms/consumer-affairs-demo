@@ -1,0 +1,92 @@
+// components/_cards.scss — responsive card grid and card surface.
+
+@use "../abstracts/tokens" as t;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+// Interactive variant (React BrandList): the whole card is a click target via
+// a stretched link on the heading, with clear hover / press / keyboard-focus
+// affordances. Scoped to the modifier so the multi-link SSR cards are untouched.
+.card--interactive {
+  position: relative;
+  cursor: pointer;
+
+  // Stretched link — the heading anchor covers the entire card surface.
+  h3 a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  // Keyboard focus lands on the heading link; surface the whole card.
+  &:focus-within {
+    box-shadow: var(--shadow);
+    border-color: var(--color-primary);
+  }
+
+  h3 a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  // Pressed state.
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+// The results region is programmatically focused after a filter/sort/page
+// change; suppress the container outline (the aria-live count announces it).
+.brand-list__results:focus {
+  outline: none;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.card h3 a {
+  color: var(--color-text);
+}
+
+.card .meta {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.card .excerpt {
+  color: #374151;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+@media (max-width: t.$bp-mobile) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

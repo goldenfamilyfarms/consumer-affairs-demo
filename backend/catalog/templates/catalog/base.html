@@ -1,0 +1,27 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Brand Reviews{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title"><a href="{% url 'catalog:home' %}">Brand Reviews</a></h1>
+      <nav class="site-nav">
+        <a href="{% url 'catalog:home' %}">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2024 Brand Reviews. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

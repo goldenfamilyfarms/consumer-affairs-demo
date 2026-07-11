@@ -1,0 +1,13 @@
+{
+  "//": "Minimal, targeted config: no shared preset (avoids stylistic noise). It enforces the one structural guarantee the SCSS architecture relies on — that partials don't silently collide on the same selector — over the SCSS source.",
+  "overrides": [
+    {
+      "files": ["**/*.scss"],
+      "customSyntax": "postcss-scss"
+    }
+  ],
+  "rules": {
+    "no-duplicate-selectors": true,
+    "no-empty-source": null
+  }
+}

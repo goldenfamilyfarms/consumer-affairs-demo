@@ -1,0 +1,24 @@
+// components/_stars.scss — star rating display.
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+}
+
+.stars .star-full {
+  color: var(--color-star);
+}
+
+.stars .star-empty {
+  color: var(--color-star-empty);
+}
+
+.stars .rating-value {
+  margin-left: 8px;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,38 @@
+// components/_reviews.scss — review list item.
+
+.review-item {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+.review-item .review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.review-item h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.review-item h3 a {
+  color: var(--color-text);
+}
+
+.review-item .review-byline {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  margin: 4px 0 12px;
+}
+
+.review-item .review-body {
+  color: #1f2937;
+  font-size: 0.95rem;
+}

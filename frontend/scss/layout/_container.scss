@@ -1,0 +1,7 @@
+// layout/_container.scss — centered page width wrapper.
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}

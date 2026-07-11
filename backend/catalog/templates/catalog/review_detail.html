@@ -1,0 +1,41 @@
+{% extends "catalog/base.html" %}
+{% load catalog_extras %}
+
+{% block title %}{{ review.title }} - Brand Reviews{% endblock %}
+
+{% block content %}
+<section class="review-hero">
+  <div class="container">
+    <a class="brand-link" href="{% url 'catalog:brand_detail' review.brand.slug %}">{{ review.brand.name }}</a>
+    <h1>{{ review.title }}</h1>
+    {% if review.rating %}
+    <div class="stars" aria-label="Rating: {{ review.rating }} out of 5">
+      {% for i in "12345" %}
+        {% if forloop.counter <= review.rating %}
+          <span class="star-full">&#9733;</span>
+        {% else %}
+          <span class="star-empty">&#9733;</span>
+        {% endif %}
+      {% endfor %}
+      <span class="rating-value">{{ review.rating }}.0</span>
+    </div>
+    {% endif %}
+    <div class="review-byline">
+      {% if review.reviewer_name %}By {{ review.reviewer_name }}{% endif %}
+      {% if review.reviewer_location %} &middot; {{ review.reviewer_location }}{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="brand-body">
+  <div class="container">
+    <div class="content review-body">
+      {{ review.body|sanitize_html }}
+    </div>
+    <p class="meta">
+      Read more reviews for
+      <a href="{% url 'catalog:brand_detail' review.brand.slug %}">{{ review.brand.name }}</a>.
+    </p>
+  </div>
+</section>
+{% endblock %}

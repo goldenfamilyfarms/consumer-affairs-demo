@@ -1,0 +1,127 @@
+// components/_states.scss — loading / empty / error presentation + skeletons.
+//
+// The loading state renders shimmer skeleton cards (matching the real card
+// footprint, so there's no layout shift when data arrives). Empty and error
+// states are centered panels; error is tinted and carries a primary action.
+
+@use "../abstracts/tokens" as t;
+
+// Shared button used by the error retry action (and reusable elsewhere).
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// Centered status panel for empty / error states.
+.brand-list__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 48px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  color: var(--color-muted);
+
+  p {
+    margin: 0 0 12px;
+    font-size: 1rem;
+  }
+
+  &--error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+  }
+}
+
+// Skeleton loading grid: cards that mirror the real BrandCard layout.
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #eceef1;
+  border-radius: 6px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.65),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  &--title {
+    height: 20px;
+    width: 65%;
+  }
+  &--badge {
+    height: 18px;
+    width: 88px;
+    border-radius: 999px;
+  }
+  &--stars {
+    height: 16px;
+    width: 120px;
+  }
+  &--line {
+    height: 12px;
+    width: 100%;
+  }
+  &--line-short {
+    height: 12px;
+    width: 45%;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}

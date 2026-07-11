@@ -1,0 +1,80 @@
+{% extends "catalog/base.html" %}
+
+{% block title %}Home - Brand Reviews{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <h1>Trusted Brand Reviews</h1>
+    <p>Real reviews from real customers. Find the brands you can trust.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Recent Reviews</h2>
+    </div>
+    <div class="grid">
+      {% for review in recent_reviews %}
+      <article class="card">
+        <h3><a href="{% url 'catalog:review_detail' review.slug %}">{{ review.title }}</a></h3>
+        <div class="meta">
+          {% if review.reviewer_name %}By {{ review.reviewer_name }}{% endif %}
+          {% if review.reviewer_location %} &middot; {{ review.reviewer_location }}{% endif %}
+        </div>
+        {% if review.rating %}
+        <div class="stars" aria-label="Rating: {{ review.rating }} out of 5">
+          {% for i in "12345" %}
+            {% if forloop.counter <= review.rating %}
+              <span class="star-full">&#9733;</span>
+            {% else %}
+              <span class="star-empty">&#9733;</span>
+            {% endif %}
+          {% endfor %}
+          <span class="rating-value">{{ review.rating }}.0</span>
+        </div>
+        {% endif %}
+        <p class="excerpt">{{ review.body|striptags|truncatewords:25 }}</p>
+        <div class="meta">
+          <a href="{% url 'catalog:brand_detail' review.brand.slug %}">{{ review.brand.name }}</a>
+        </div>
+      </article>
+      {% empty %}
+      <p>No reviews yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Featured Brands</h2>
+    </div>
+    <div class="grid">
+      {% for brand in featured_brands %}
+      <article class="card">
+        <h3><a href="{% url 'catalog:brand_detail' brand.slug %}">{{ brand.name }}</a></h3>
+        <span class="badge">{{ brand.industry.name }}</span>
+        {% if brand.computed_average_rating is not None %}
+        <div class="stars" aria-label="Average rating: {{ brand.computed_average_rating|floatformat:1 }} out of 5">
+          {% for i in "12345" %}
+            {% if forloop.counter <= brand.computed_average_rating %}
+              <span class="star-full">&#9733;</span>
+            {% else %}
+              <span class="star-empty">&#9733;</span>
+            {% endif %}
+          {% endfor %}
+          <span class="rating-value">{{ brand.computed_average_rating|floatformat:1 }}</span>
+        </div>
+        {% endif %}
+        <p class="excerpt">{{ brand.body|striptags|truncatewords:20 }}</p>
+      </article>
+      {% empty %}
+      <p>No brands yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

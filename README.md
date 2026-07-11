@@ -4,6 +4,95 @@ Self-contained, reproducible WordPress site used as the source for a WP → Djan
 
 The site is a small consumer-reviews directory: **brands** with profile pages plus user-submitted **reviews** linked to each brand. Two custom post types, one taxonomy, ACF fields, Yoast SEO metadata.
 
+---
+
+# Django Migration — Submission
+
+The Django replacement lives in `backend/` (Django + DRF) and `frontend/` (Vite + React 18, plus the SCSS source tree). It models the WordPress domain relationally, imports the WP content through a re-runnable command, serves the public pages under permalink-matching URLs, exposes `GET /api/brands/`, and ships a `<BrandList />` React component.
+
+## Running the Django app locally
+
+The migration reads the committed `db/dump.sql`, so you do **not** need the WordPress/Docker stack running to use the Django app.
+
+```bash
+# From the repo root — create a virtualenv and install backend deps.
+python -m venv .venv
+# Windows:  .venv\Scripts\activate       macOS/Linux:  source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+cd backend
+python manage.py migrate            # create the schema
+python manage.py import_wordpress   # import WP content from db/dump.sql (see below)
+python manage.py runserver          # http://127.0.0.1:8000/
+```
+
+Pages:
+- Homepage (hero + recent reviews + featured brands): <http://127.0.0.1:8000/>
+- Brand detail: `/brand/<slug>/`  ·  Review detail: `/review/<slug>/` (slugs match the WP permalinks)
+- Brand listing API: `/api/brands/`
+
+## API endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/brands/` | Paginated brand cards. Params: `industry` (slug), `sort` (`avg_rating`\|`review_count`), `dir` (`asc`\|`desc`), `page`, `page_size`. |
+| `GET /api/industries/` | Unpaginated list of industries (`name`, `slug`, `brand_count`) for the filter control — so the React dropdown is complete on a cold `?industry=…` load. |
+
+**Pagination:** page-number style (`count`/`next`/`previous`/`results`). Default
+page size is **12**; `page_size` is client-controllable up to a **max of 100**
+(`BrandPagination.max_page_size`). An out-of-range `page` returns **404**; an
+unknown `industry`, `sort`, or `dir` returns **400** with a `detail` message.
+
+## Running the migration (and re-running it safely)
+
+```bash
+cd backend
+python manage.py import_wordpress                 # default: parse ../db/dump.sql
+python manage.py import_wordpress --dump-path=/path/to/dump.sql
+python manage.py import_wordpress --source=mariadb # stream from a live DB (needs PyMySQL + WORDPRESS_DB_* env)
+```
+
+The import is **idempotent**. It upserts by the stable WordPress natural key (`wp_post_id` / `wp_user_id` / `wp_term_id`) and records every key it has ever created in an `ImportLedger`. On re-run: unchanged rows are left alone, changed source fields are updated in place, and rows you deleted between runs are **not** resurrected (the ledger distinguishes "never imported" from "imported then deleted"). A first run against the seeded dump reports 5 industries, 8 reviewers, 5 brands, 60 reviews; a second run reports zero created and zero updated. An unreadable source exits non-zero with the reason on stderr and prints no summary.
+
+## Running the React component locally
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173/  (proxies /api → http://localhost:8000)
+```
+
+Run the Django server (above) alongside it so the component has an API to consume.
+
+## Running the tests
+
+```bash
+# Backend: unit, integration, and 11 Hypothesis property tests
+cd backend && python -m pytest
+
+# Frontend: Vitest + React Testing Library + axe, and the SCSS structure test
+cd frontend && npm test
+
+# Frontend: lint the SCSS for structural selector collisions
+cd frontend && npm run lint:css
+```
+
+## Modeling decisions (half-page)
+
+- **Average rating — stored *and* derived.** The WP ACF value is kept on `Brand.migrated_average_rating` for audit, but the authoritative value is *computed* from live reviews (`with_stats()` annotation + a matching model property). Reviews are the source of truth; a stored aggregate drifts. Ratings `< 1` are excluded; no qualifying reviews → `null`.
+- **Reviewers — a dedicated `Reviewer` model**, not `auth.User` (which would conflate authentication with attribution). One reviewer per WP author; the per-review `reviewer_name`/`reviewer_location` strings also live on `Review` so they survive an unresolved author.
+- **Postmeta.** Queried ACF fields → first-class columns; the two Yoast keys → retained SEO fields; ACF shadow `_key` rows and everything else → dropped.
+- **Migration.** A `manage.py` command over a pluggable `WordPressSource` (SQL-dump default, MariaDB for scale). Idempotent upsert by WP natural key + an `ImportLedger` so a re-run never resurrects a deleted row. Each phase is atomic and writes with chunked `bulk_create`/`bulk_update`.
+- **API.** DRF page-number pagination; filter by industry **slug**; allow-listed `sort`+`dir` on DB annotations with nulls-last; clean `400`/`404`s.
+- **Component & state.** The URL query string is the single source of truth for filter/sort/page; `useBrands` is an explicit `loading|success|empty|error` machine with abortable fetches; native labelled controls; responsive `.grid`.
+- **SCSS.** Tokens partial mirroring the reference `:root`, 7-1 partitioning with `@use` — a new component is an isolated partial.
+
+**What I'd do differently with more time:** cursor pagination as an additive option for mobile infinite-scroll; cache/precompute the rating + top-review if read volume grew; a chunked-flush importer (stream the source in batches) for a true 100× dataset.
+
+**Where I took AI's default:** DRF's `PageNumberPagination` shape and SQLite for local dev — both appropriate here and trivially swappable (Postgres in prod).
+
+---
+
 ## Quick start
 
 ```bash
@@ -112,6 +201,39 @@ The theme is intentionally small (~10 PHP files + one stylesheet) and is meant t
 - `/wp-json/wp/v2/pages` — static pages
 
 ACF fields are exposed natively via `show_in_rest: true` set in `wp-content/mu-plugins/acf-fields.php`.
+
+## Styling (SCSS)
+
+The Django frontend styles live as an organized SCSS source tree under `frontend/scss/`, split into partials by concern:
+
+```
+frontend/scss/
+  main.scss                 # entry point — forwards all partials
+  abstracts/_tokens.scss    # design tokens (colors, radius, shadows, max width, font)
+  base/                     # reset + typography
+  layout/                   # container, header, footer, sections
+  components/               # cards, stars, badge, reviews, pagination, page
+```
+
+The tree compiles to `frontend/static/css/theme.css`, which is structurally equivalent to `reference/theme.css`.
+
+Compile it with [Dart Sass](https://sass-lang.com/dart-sass/):
+
+```bash
+sass frontend/scss/main.scss frontend/static/css/theme.css
+```
+
+If Dart Sass isn't installed globally, run it through npm without a global install:
+
+```bash
+npx sass frontend/scss/main.scss frontend/static/css/theme.css
+```
+
+To recompile automatically while editing, add `--watch`:
+
+```bash
+sass --watch frontend/scss/main.scss frontend/static/css/theme.css
+```
 
 ## Notes for the maintainer
 

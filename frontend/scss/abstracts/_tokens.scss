@@ -1,0 +1,76 @@
+// abstracts/_tokens.scss
+//
+// Single source of truth for design values, mirrored from the `:root`
+// custom properties in `reference/theme.css`. Tokens are declared as named
+// SCSS variables (so partials can reference them at build time — e.g. the
+// responsive breakpoint, which CSS custom properties cannot express) and then
+// re-emitted as CSS custom properties so runtime theming keeps working.
+
+// Colors
+$color-bg: #f7f7f5;
+$color-card: #ffffff;
+$color-text: #1a1a1a;
+$color-muted: #6b7280;
+$color-border: #e5e7eb;
+$color-primary: #0f766e;
+$color-primary-dark: #115e59;
+$color-accent: #f59e0b;
+$color-star: #f59e0b;
+$color-star-empty: #d1d5db;
+
+// Radius
+$radius: 10px;
+
+// Shadows
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+// Layout
+$max-width: 1100px;
+
+// Typography
+$font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+  Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+
+// Responsive breakpoint (SCSS-only: media queries can't read custom props)
+$bp-mobile: 640px;
+
+// Re-emit tokens as CSS custom properties for runtime theming.
+:root {
+  --color-bg: #{$color-bg};
+  --color-card: #{$color-card};
+  --color-text: #{$color-text};
+  --color-muted: #{$color-muted};
+  --color-border: #{$color-border};
+  --color-primary: #{$color-primary};
+  --color-primary-dark: #{$color-primary-dark};
+  --color-accent: #{$color-accent};
+  --color-star: #{$color-star};
+  --color-star-empty: #{$color-star-empty};
+  --radius: #{$radius};
+  --shadow-sm: #{$shadow-sm};
+  --shadow: #{$shadow};
+  --max-width: #{$max-width};
+  --font-sans: #{$font-sans};
+}
+
+// Dark-mode override layer.
+//
+// Because every consumer reads the `--color-*` / `--shadow-*` custom properties
+// (never the raw SCSS values), dark mode is a single override of the neutral
+// *surface* tokens here — no component partial needs to change. Brand hues
+// (primary/accent/star) carry through; only the empty-star and shadows are
+// nudged for contrast on dark surfaces. Gated on the OS preference so it's
+// opt-in and non-breaking for the light reference theme.
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1115;
+    --color-card: #171a21;
+    --color-text: #e5e7eb;
+    --color-muted: #9aa3b2;
+    --color-border: #2a2f3a;
+    --color-star-empty: #3a3f4b;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+}

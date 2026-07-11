@@ -1,0 +1,14 @@
+// components/_page.scss — static page body (about/contact).
+
+.page-body {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+}
+
+.page-body h1 {
+  margin-top: 0;
+  font-size: 1.75rem;
+}

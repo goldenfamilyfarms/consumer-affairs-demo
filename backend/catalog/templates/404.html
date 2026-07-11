@@ -1,0 +1,15 @@
+{% extends "catalog/base.html" %}
+
+{% block title %}Page Not Found - Brand Reviews{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="page-body">
+      <h1>Page Not Found</h1>
+      <p>Sorry, we couldn't find the page you were looking for.</p>
+      <p><a href="{% url 'catalog:home' %}">Return to the homepage</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

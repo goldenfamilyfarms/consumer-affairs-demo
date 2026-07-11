@@ -1,0 +1,39 @@
+// main.scss — single compile entry point.
+//
+// Compile with Dart Sass:
+//   sass frontend/scss/main.scss frontend/static/css/theme.css
+//
+// Partials use `@use` (not `@import`): namespaced, load-order independent, and
+// loaded once. Adding a new component means creating a `components/_thing.scss`
+// partial and adding one `@use` line here — existing partials stay untouched.
+//
+// Selector-collision convention: `@use` namespaces SCSS members (variables,
+// mixins), but it does NOT namespace emitted CSS selectors — two partials both
+// writing `.title` would silently merge in the output. We keep selectors
+// disjoint by convention: each component partial owns a single BEM block
+// (`.card`, `.stars`, `.badge`, …) and only writes selectors under it. In CI
+// this is enforceable structurally with stylelint's `no-duplicate-selectors`
+// rule over the compiled CSS; the convention above is what keeps it green.
+
+// Abstracts (design tokens → :root custom properties)
+@use "abstracts/tokens";
+
+// Base
+@use "base/reset";
+@use "base/typography";
+
+// Layout
+@use "layout/container";
+@use "layout/header";
+@use "layout/footer";
+@use "layout/sections";
+
+// Components
+@use "components/cards";
+@use "components/stars";
+@use "components/badge";
+@use "components/reviews";
+@use "components/pagination";
+@use "components/page";
+@use "components/controls";
+@use "components/states";
