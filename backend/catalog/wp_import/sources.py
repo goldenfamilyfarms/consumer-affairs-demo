@@ -44,6 +44,7 @@ __all__ = [
     "WordPressSource",
     "SqlDumpSource",
     "MariaDbSource",
+    "RestApiSource",
 ]
 
 
@@ -737,4 +738,175 @@ class MariaDbSource:
                 reviewer_location=_coerce_text(row.get("reviewer_location")),
                 brand_wp_post_id=_to_int(_coerce_optional_text(row.get("brand"))),
                 wp_user_id=_to_int(_coerce_optional_text(row.get("post_author"))),
+            )
+
+
+# --------------------------------------------------------------------------- #
+# RestApiSource (alternative: read from the live WordPress REST API)
+# --------------------------------------------------------------------------- #
+
+def _iso_to_datetime(value: Optional[str]) -> Optional[datetime]:
+    """Parse a WP REST ISO-8601 timestamp (e.g. ``2026-05-19T20:28:55``)."""
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    return _make_aware_utc(parsed)
+
+
+def _rendered(field) -> str:
+    """Extract the ``.rendered`` string from a WP REST title/content field."""
+    if isinstance(field, dict):
+        return field.get("rendered", "") or ""
+    return field or ""
+
+
+def _brand_ref_id(acf_brand) -> Optional[int]:
+    """Normalize the ACF ``brand`` post-object reference to a post id.
+
+    Depending on the ACF return-format the REST payload may carry a bare id, a
+    numeric string, or an embedded object (`{"ID": …}` / `{"id": …}`).
+    """
+    if isinstance(acf_brand, dict):
+        return _to_int(acf_brand.get("ID") or acf_brand.get("id"))
+    if isinstance(acf_brand, bool):  # guard: bool is an int subclass
+        return None
+    if isinstance(acf_brand, int):
+        return acf_brand
+    return _to_int(acf_brand)
+
+
+def _urllib_get_json(url: str):
+    """Default HTTP getter: GET ``url`` and parse JSON, using only the stdlib.
+
+    Kept dependency-free (no ``requests``) and injectable so ``RestApiSource``
+    is unit-testable with canned payloads. Any transport/HTTP error propagates
+    to the caller (the import command turns it into a ``CommandError``).
+    """
+    import json
+    import urllib.request
+
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 (trusted base URL)
+        return json.loads(resp.read().decode("utf-8"))
+
+
+class RestApiSource:
+    """Read WordPress content from the live REST API under ``/wp-json/wp/v2/``.
+
+    Yields the *same* four generators as the other sources, so the importer is
+    unchanged — this is the payoff of the :class:`WordPressSource` protocol:
+    adding a third origin is a new class, not an importer rewrite.
+
+    It reads the CPT ``rest_base`` collections (``brands``/``reviews``), the
+    ``industry`` taxonomy, and ``users``, following simple ``per_page``/``page``
+    pagination. ACF fields arrive inline under the ``acf`` key (the mu-plugin
+    sets ``show_in_rest``); Yoast title/description are read from
+    ``yoast_head_json`` when present.
+
+    Config: ``base_url`` (default ``$WORDPRESS_REST_BASE`` or
+    ``http://localhost:8080``). ``fetch_json`` is injectable for tests; the
+    default uses ``urllib`` (no third-party dependency). This source needs the
+    WordPress stack running — hence it is an *alternative*, not the default.
+    """
+
+    def __init__(self, base_url: Optional[str] = None, per_page: int = 100, fetch_json=None):
+        import os
+
+        base = base_url or os.environ.get("WORDPRESS_REST_BASE", "http://localhost:8080")
+        self.base_url = base.rstrip("/")
+        self.per_page = per_page
+        self._fetch_json = fetch_json or _urllib_get_json
+
+    # -- paging ------------------------------------------------------------ #
+
+    def _paged(self, resource: str) -> Iterator[dict]:
+        """Yield every item of a REST collection, following page-number paging."""
+        page = 1
+        while True:
+            url = (
+                f"{self.base_url}/wp-json/wp/v2/{resource}"
+                f"?per_page={self.per_page}&page={page}"
+            )
+            batch = self._fetch_json(url)
+            # WP returns an error object (dict) once the page number exceeds the
+            # range; anything that isn't a non-empty list ends the walk.
+            if not isinstance(batch, list) or not batch:
+                return
+            for item in batch:
+                yield item
+            if len(batch) < self.per_page:
+                return
+            page += 1
+
+    # -- generators -------------------------------------------------------- #
+
+    def industries(self) -> Iterable[SourceIndustry]:
+        for term in self._paged("industry"):
+            term_id = _to_int(term.get("id"))
+            if term_id is None:
+                continue
+            yield SourceIndustry(
+                wp_term_id=term_id,
+                name=term.get("name", "") or "",
+                slug=term.get("slug", "") or "",
+            )
+
+    def users(self) -> Iterable[SourceUser]:
+        for user in self._paged("users"):
+            user_id = _to_int(user.get("id"))
+            if user_id is None:
+                continue
+            yield SourceUser(
+                wp_user_id=user_id,
+                # REST rarely exposes user_login/email (privacy); fall back to
+                # the public slug/name. `email` stays blank when absent.
+                user_login=user.get("slug", "") or "",
+                display_name=user.get("name", "") or "",
+                email=user.get("email", "") or "",
+            )
+
+    def brands(self) -> Iterable[SourceBrand]:
+        for post in self._paged("brands"):
+            post_id = _to_int(post.get("id"))
+            if post_id is None:
+                continue
+            acf = post.get("acf") or {}
+            yoast = post.get("yoast_head_json") or {}
+            industry_ids = post.get("industry") or []  # taxonomy term ids
+            industry_term_id = _to_int(industry_ids[0]) if industry_ids else None
+            yield SourceBrand(
+                wp_post_id=post_id,
+                name=_rendered(post.get("title")),
+                slug=post.get("slug", "") or "",
+                body=_rendered(post.get("content")),
+                wp_post_date=_iso_to_datetime(post.get("date")),
+                industry_wp_term_id=industry_term_id,
+                website_url=acf.get("website_url", "") or "",
+                founded_year=_to_int(acf.get("founded_year")),
+                headquarters=acf.get("headquarters", "") or "",
+                average_rating=_to_decimal(acf.get("average_rating")),
+                seo_title=yoast.get("title", "") or "",
+                seo_metadesc=yoast.get("description", "") or "",
+            )
+
+    def reviews(self) -> Iterable[SourceReview]:
+        for post in self._paged("reviews"):
+            post_id = _to_int(post.get("id"))
+            if post_id is None:
+                continue
+            acf = post.get("acf") or {}
+            yield SourceReview(
+                wp_post_id=post_id,
+                title=_rendered(post.get("title")),
+                slug=post.get("slug", "") or "",
+                body=_rendered(post.get("content")),
+                wp_post_date=_iso_to_datetime(post.get("date")),
+                rating=_to_int(acf.get("rating")),
+                reviewer_name=acf.get("reviewer_name", "") or "",
+                reviewer_location=acf.get("reviewer_location", "") or "",
+                brand_wp_post_id=_brand_ref_id(acf.get("brand")),
+                wp_user_id=_to_int(post.get("author")),
             )

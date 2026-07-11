@@ -3,8 +3,8 @@
 Imports WordPress content (Industries, Reviewers, Brands, Reviews) into the
 Django database through a pluggable :class:`WordPressSource`. The default source
 parses the committed ``db/dump.sql`` file; a ``mariadb`` source streams from a
-live MariaDB/MySQL connection; a ``rest`` source is reserved but not yet
-implemented.
+live MariaDB/MySQL connection; a ``rest`` source reads the live WordPress REST
+API under ``/wp-json/wp/v2/``.
 
 Usage::
 
@@ -30,7 +30,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from catalog.wp_import.importer import run_import
-from catalog.wp_import.sources import MariaDbSource, SqlDumpSource
+from catalog.wp_import.sources import MariaDbSource, RestApiSource, SqlDumpSource
 
 
 class Command(BaseCommand):
@@ -46,8 +46,16 @@ class Command(BaseCommand):
             default="dump",
             help=(
                 "Where to read WordPress content from: 'dump' (default, parses "
-                "the SQL dump), 'mariadb' (live DB connection), or 'rest' (REST "
-                "API — not implemented)."
+                "the SQL dump), 'mariadb' (live DB connection), or 'rest' (the "
+                "live WordPress REST API under /wp-json/wp/v2/)."
+            ),
+        )
+        parser.add_argument(
+            "--rest-base",
+            default=None,
+            help=(
+                "Base URL of the WordPress site for --source=rest "
+                "(default: $WORDPRESS_REST_BASE or http://localhost:8080)."
             ),
         )
         parser.add_argument(
@@ -120,10 +128,15 @@ class Command(BaseCommand):
                 ) from exc
 
         if source_kind == "rest":
-            raise CommandError(
-                "The 'rest' source (RestApiSource) is not implemented. "
-                "Use --source=dump (default) or --source=mariadb."
-            )
+            # Construction is cheap; unreachable-host/HTTP errors surface when
+            # the importer consumes a generator and become a CommandError in
+            # handle(). Needs the WordPress stack running.
+            try:
+                return RestApiSource(base_url=options.get("rest_base"))
+            except Exception as exc:  # noqa: BLE001
+                raise CommandError(
+                    f"Could not configure the REST source: {exc}"
+                ) from exc
 
         # argparse choices guard this, but keep an explicit fallback.
         raise CommandError(f"Unknown source: {source_kind!r}")
