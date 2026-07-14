@@ -77,7 +77,7 @@ export default function BrandList() {
     [filters.industry, filters.sort, filters.dir, filters.page],
   );
 
-  const { status, data, error, retry } = useBrands(query);
+  const { status, data, error, isFetching, retry } = useBrands(query);
 
   // Primary source of filter options: the dedicated industries endpoint.
   const { industries, failed: industriesFailed } = useIndustries();
@@ -109,10 +109,11 @@ export default function BrandList() {
   // the results region (its aria-live count announces the change too).
   useEffect(() => {
     if (!pendingFocusRef.current) return;
-    if (status === BrandsStatus.LOADING) return;
+    // Wait for the request to settle so focus lands on the updated results.
+    if (isFetching) return;
     if (resultsRef.current) resultsRef.current.focus();
     pendingFocusRef.current = false;
-  }, [status, data]);
+  }, [isFetching, data]);
 
   const results = data && Array.isArray(data.results) ? data.results : [];
   const totalCount = data && typeof data.count === "number" ? data.count : null;
@@ -171,10 +172,16 @@ export default function BrandList() {
       </div>
 
       <div
-        className="brand-list__results"
+        className={
+          "brand-list__results" +
+          (isFetching && status !== BrandsStatus.LOADING
+            ? " brand-list__results--busy"
+            : "")
+        }
         ref={resultsRef}
         tabIndex={-1}
         aria-label="Brand results"
+        aria-busy={isFetching}
       >
         {status === BrandsStatus.LOADING ? <Loading /> : null}
         {status === BrandsStatus.EMPTY ? <Empty /> : null}

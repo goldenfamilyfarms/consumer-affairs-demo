@@ -16,5 +16,5 @@ backend/db.sqlite3
 .django.log
 .hypothesis/
 
-# NOTE: _prep/ (interview-prep notes) IS tracked in this PRIVATE backup repo.
-# Do NOT include it in any repo shared with interviewers.
+# Interview-prep notes + evaluator scorecards — keep out of shared repos.
+_prep/

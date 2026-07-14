@@ -48,6 +48,7 @@ export function useBrands(query = {}, options = {}) {
     status: BrandsStatus.LOADING,
     data: null,
     error: null,
+    isFetching: true,
   });
 
   // Bump this to force a re-fetch (used by the error-state retry action).
@@ -64,7 +65,16 @@ export function useBrands(query = {}, options = {}) {
 
   useEffect(() => {
     const controller = new AbortController();
-    setState({ status: BrandsStatus.LOADING, data: null, error: null });
+    // Stale-while-revalidate: on a re-fetch keep the previous results (and
+    // their settled status) on screen and just flag `isFetching`, so the grid
+    // never blanks to skeletons mid-interaction. Skeletons show only on the
+    // initial load, when there is no data yet.
+    setState((prev) => ({
+      status: prev.data ? prev.status : BrandsStatus.LOADING,
+      data: prev.data,
+      error: null,
+      isFetching: true,
+    }));
 
     const { query: currentQuery, options: currentOptions } = latest.current;
 
@@ -77,6 +87,7 @@ export function useBrands(query = {}, options = {}) {
           status: results.length === 0 ? BrandsStatus.EMPTY : BrandsStatus.SUCCESS,
           data: page,
           error: null,
+          isFetching: false,
         });
       })
       .catch((error) => {
@@ -84,7 +95,12 @@ export function useBrands(query = {}, options = {}) {
         if (controller.signal.aborted || (error && error.name === "AbortError")) {
           return;
         }
-        setState({ status: BrandsStatus.ERROR, data: null, error });
+        setState({
+          status: BrandsStatus.ERROR,
+          data: null,
+          error,
+          isFetching: false,
+        });
       });
 
     return () => controller.abort();

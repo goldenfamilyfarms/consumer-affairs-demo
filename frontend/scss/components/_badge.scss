@@ -2,9 +2,10 @@
 
 .badge {
   display: inline-block;
-  background: #ecfdf5;
-  color: var(--color-primary-dark);
-  border: 1px solid #d1fae5;
+  align-self: flex-start; // don't stretch when a flex child (e.g. the card column)
+  background: var(--color-badge-bg);
+  color: var(--color-badge-text);
+  border: 1px solid var(--color-badge-border);
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.78rem;

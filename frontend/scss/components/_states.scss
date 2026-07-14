@@ -125,3 +125,40 @@
     animation: none;
   }
 }
+
+// Re-fetch (stale-while-revalidate): the previous results stay mounted while a
+// new request is in flight. Dim them and block interaction so the change reads
+// as a live update rather than a full reload — this is what removes the
+// grid → skeleton → grid "flash" on filter/sort/page changes.
+.brand-list__results--busy {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-list__results--busy {
+    transition: none;
+  }
+}
+
+// Dark-mode surfaces for the loading/error views (the skeleton fill and error
+// tint were light-theme literals; mirror the token palette on dark).
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: #232833;
+  }
+  .skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+  }
+  .brand-list__state--error {
+    border-color: #7f1d1d;
+    background: #2a1416;
+    color: #fca5a5;
+  }
+}

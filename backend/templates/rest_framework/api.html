@@ -1,0 +1,129 @@
+{% extends "rest_framework/base.html" %}
+
+{# Theme the browsable API to match the React app + SSR pages.               #}
+{# The app is token-driven: light by default, flipping to dark surfaces on   #}
+{# `prefers-color-scheme: dark`. DRF ships a light Bootstrap theme, so we     #}
+{# only add a dark-mode override layer here — light mode keeps DRF's default. #}
+{# Palette mirrors frontend/scss/abstracts/_tokens.scss.                      #}
+
+{% block style %}
+  {{ block.super }}
+  <style>
+    @media (prefers-color-scheme: dark) {
+      /* Surfaces + base text */
+      html, body {
+        background: #0f1115 !important;
+        color: #e5e7eb !important;
+      }
+      .wrapper, .container, #content, .content-main {
+        background: transparent !important;
+      }
+
+      /* Top navbar */
+      .navbar-inverse,
+      .navbar.navbar-static-top {
+        background: #171a21 !important;
+        border-bottom: 1px solid #2a2f3a !important;
+        box-shadow: none !important;
+      }
+      .navbar-inverse .navbar-brand,
+      .navbar-brand,
+      .navbar-inverse .nav > li > a {
+        color: #e5e7eb !important;
+      }
+      .navbar-brand:hover,
+      .navbar-inverse .nav > li > a:hover {
+        color: #5eead4 !important;
+      }
+
+      /* Breadcrumbs */
+      .breadcrumb {
+        background: #171a21 !important;
+        border: 1px solid #2a2f3a !important;
+        border-radius: 10px !important;
+      }
+      .breadcrumb > .active { color: #9aa3b2 !important; }
+      .breadcrumb > li + li:before { color: #6b7280 !important; }
+
+      /* Headings + descriptive text */
+      .page-header {
+        border-bottom: 1px solid #2a2f3a !important;
+      }
+      h1, h2, h3, h4, .page-header h1 { color: #f3f4f6 !important; }
+      p, .meta, label, .help-block { color: #c4ccd8 !important; }
+
+      /* Links */
+      a { color: #5eead4 !important; }
+      a:hover, a:focus { color: #99f6e4 !important; }
+
+      /* Code / request + response blocks (the JSON payload) */
+      pre, pre.prettyprint,
+      .request-info pre, .response-info pre {
+        background: #12151b !important;
+        border: 1px solid #2a2f3a !important;
+        border-radius: 10px !important;
+        color: #e5e7eb !important;
+      }
+
+      /* Google-code-prettify token colors tuned for the dark surface */
+      .prettyprint .pln { color: #e5e7eb !important; }  /* plain      */
+      .prettyprint .str { color: #86efac !important; }  /* strings    */
+      .prettyprint .kwd { color: #5eead4 !important; }  /* keywords   */
+      .prettyprint .com { color: #9aa3b2 !important; }  /* comments   */
+      .prettyprint .lit { color: #fbbf24 !important; }  /* numbers    */
+      .prettyprint .pun,
+      .prettyprint .opn,
+      .prettyprint .clo { color: #c4ccd8 !important; }  /* punctuation*/
+      .prettyprint .tag { color: #5eead4 !important; }
+      .prettyprint .atn { color: #fbbf24 !important; }
+      .prettyprint .atv { color: #86efac !important; }
+      .prettyprint .dec,
+      .prettyprint .var { color: #f59e0b !important; }
+      .prettyprint .nocode { color: #9aa3b2 !important; }
+
+      /* Buttons — teal primary to match the brand accent */
+      .btn-primary {
+        background: #0f766e !important;
+        border-color: #115e59 !important;
+        color: #ffffff !important;
+      }
+      .btn-primary:hover,
+      .btn-primary:focus {
+        background: #115e59 !important;
+        border-color: #0f766e !important;
+      }
+      .btn-default {
+        background: #1f242e !important;
+        border-color: #2a2f3a !important;
+        color: #e5e7eb !important;
+      }
+      .btn-default:hover,
+      .btn-default:focus {
+        background: #262c38 !important;
+        color: #ffffff !important;
+      }
+
+      /* Forms, panels, wells */
+      .well, .tab-content, .panel, .modal-content {
+        background: #171a21 !important;
+        border: 1px solid #2a2f3a !important;
+        color: #e5e7eb !important;
+      }
+      input, select, textarea, .form-control {
+        background: #12151b !important;
+        border: 1px solid #2a2f3a !important;
+        color: #e5e7eb !important;
+      }
+      .nav-tabs { border-bottom: 1px solid #2a2f3a !important; }
+      .nav-tabs > li.active > a,
+      .nav-tabs > li.active > a:hover,
+      .nav-tabs > li.active > a:focus {
+        background: #171a21 !important;
+        border-color: #2a2f3a #2a2f3a transparent !important;
+        color: #e5e7eb !important;
+      }
+
+      hr { border-top-color: #2a2f3a !important; }
+    }
+  </style>
+{% endblock %}
