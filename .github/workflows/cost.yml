@@ -1,0 +1,43 @@
+name: Cost Workflow
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  cost-diff-heuristics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build change-cost heuristic
+        id: cost
+        run: |
+          git fetch --no-tags --depth=1 origin ${{ github.base_ref || 'main' }}
+          BASE_REF=${{ github.base_ref || 'main' }}
+          FILE_COUNT=$(git diff --name-only origin/$BASE_REF...HEAD | wc -l)
+          LOC_DELTA=$(git diff --numstat origin/$BASE_REF...HEAD | awk '{add+=$1; del+=$2} END {print add+del+0}')
+          echo "files=$FILE_COUNT" >> "$GITHUB_OUTPUT"
+          echo "loc=$LOC_DELTA" >> "$GITHUB_OUTPUT"
+      - name: Gate oversized changes
+        run: |
+          if [ "${{ steps.cost.outputs.loc }}" -gt 2000 ]; then
+            echo "Large change detected (${{ steps.cost.outputs.loc }} LOC delta). Split into smaller increments or attach rollout/cost notes."
+            exit 1
+          fi
+      - name: Comment cost summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `Cost heuristic summary:\n- Files changed: ${{ steps.cost.outputs.files }}\n- LOC delta: ${{ steps.cost.outputs.loc }}\n\nAdd cloud/infrastructure cost notes if this change increases runtime footprint.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });

@@ -1,0 +1,56 @@
+name: Release Workflow
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Release action"
+        required: true
+        type: choice
+        options: [canary, rollback]
+      target:
+        description: "Deployment target"
+        required: true
+        default: "staging"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-draft:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-notes:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish GitHub Release notes
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+
+  canary-and-rollback:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute release operation
+        run: |
+          echo "Action: ${{ inputs.action }}"
+          echo "Target: ${{ inputs.target }}"
+          if [ "${{ inputs.action }}" = "canary" ]; then
+            echo "Run canary deploy automation here (e.g., Helm canary rollout)."
+          else
+            echo "Run rollback automation here (e.g., rollback deployment revision)."
+          fi

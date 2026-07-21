@@ -1,0 +1,61 @@
+name: Performance Workflow
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  api-latency-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Migrate and seed app
+        run: |
+          .venv/bin/python backend/manage.py migrate
+          .venv/bin/python backend/manage.py import_wordpress
+      - name: Enforce API latency budgets
+        run: .venv/bin/python scripts/ci/check_api_latency.py --max-seconds 0.35
+
+  frontend-bundle-budgets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Enforce bundle size budget
+        run: python3 scripts/ci/check_frontend_bundle_size.py --max-kb 300
+
+  lighthouse-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build frontend for Lighthouse
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npm run preview -- --host 127.0.0.1 --port 4173 &
+      - name: Lighthouse check
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: .github/lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true

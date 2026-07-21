@@ -1,0 +1,11 @@
+flags:
+  - name: api_brands_cache
+    description: Cache API brand list responses in-memory.
+    enabled: true
+    owner: platform
+    kill_switch: true
+  - name: frontend_experimental_filters
+    description: Enable advanced BrandList filtering controls.
+    enabled: false
+    owner: frontend
+    kill_switch: true
