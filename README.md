@@ -77,6 +77,16 @@ cd frontend && npm test
 cd frontend && npm run lint:css
 ```
 
+## Agentic CI/CD automation workflows
+
+Ten GitHub Actions workflows are now scaffolded under
+`.github/workflows`
+to cover security, performance, data quality, release, feature flags,
+observability, environment previews, knowledge/docs, cost, and reliability.
+
+See `docs/automation-workflows.md`
+for the workflow map, required labels/secrets, and rollout notes.
+
 ## Modeling decisions (half-page)
 
 - **Average rating — stored *and* derived.** The WP ACF value is kept on `Brand.migrated_average_rating` for audit, but the authoritative value is *computed* from live reviews (`with_stats()` annotation + a matching model property). Reviews are the source of truth; a stored aggregate drifts. Ratings `< 1` are excluded; no qualifying reviews → `null`.

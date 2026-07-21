@@ -1,0 +1,46 @@
+name: Data Quality Workflow
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  migration-and-schema-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Migration dry-run and schema drift
+        run: |
+          .venv/bin/python backend/manage.py migrate --plan
+          .venv/bin/python backend/manage.py makemigrations --check --dry-run
+
+  seed-and-contract-validation:
+    runs-on: ubuntu-latest
+    needs: migration-and-schema-checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Validate idempotent importer and API contracts
+        run: |
+          .venv/bin/python backend/manage.py migrate
+          .venv/bin/python scripts/ci/verify_import_idempotency.py
+          cd backend && ../.venv/bin/python -m pytest -q api/tests catalog/tests/test_import_integration.py

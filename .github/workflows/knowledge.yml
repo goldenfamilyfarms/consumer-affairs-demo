@@ -1,0 +1,55 @@
+name: Knowledge Workflow
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  docs-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure architecture changes include documentation
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+
+          base = os.environ.get('GITHUB_BASE_REF', '')
+          if base:
+            diff_target = f'origin/{base}...HEAD'
+            subprocess.run(['git', 'fetch', 'origin', base], check=True)
+          else:
+            diff_target = 'HEAD~1...HEAD'
+
+          changed = subprocess.check_output(
+            ['git', 'diff', '--name-only', diff_target], text=True
+          ).splitlines()
+
+          code_changed = any(path.startswith(('backend/', 'frontend/')) for path in changed)
+          docs_changed = any(path.startswith(('README.md', 'docs/', '.github/adr-template.md')) for path in changed)
+
+          if code_changed and not docs_changed:
+            raise SystemExit('Code changed without docs updates. Add README/docs/ADR updates.')
+
+          print('Docs sync check passed.')
+          PY
+
+  adr-reminder:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: 'If this PR changes architecture decisions, add an ADR based on `.github/adr-template.md` under `docs/adr/`.'
+            });
